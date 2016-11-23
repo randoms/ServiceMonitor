@@ -29,7 +29,17 @@ namespace ServiceMonitor
                             HttpResponseMessage res = null;
                             try {
                                 res = await client.GetAsync("http://" + service);
-                            }catch(Exception e) { Console.WriteLine(e.StackTrace); };
+                            }catch(Exception e) {
+                                Console.WriteLine(e.StackTrace);
+                                // 服务器可能会直接挂掉
+                                if (serviceStatus[service]) {
+                                    serviceStatus[service] = false;
+                                    await sendEmailAsync(toEmail, "Service Monitor", "服务:" + service + " 现在不可用" + Environment.NewLine
+                                    + "故障时间: " + DateTime.Now + Environment.NewLine
+                                    + "请及时修复");
+                                    Console.WriteLine("Time: " + DateTime.Now + "  Service: " + service + " Status: Failed");
+                                }
+                            };
                             if (res.StatusCode != HttpStatusCode.OK && serviceStatus[service])
                             {
                                 serviceStatus[service] = false;
